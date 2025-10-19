@@ -196,7 +196,7 @@
       <div class="block-col">
         <article class="card">
           <div class="card-bg" style="background-image:url('https://picsum.photos/seed/b1/800/600');"></div>
-          <div class="star">
+          <div class="star" data-active="false">
             <!-- 星星 SVG -->
             <svg viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="1.5"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/></svg>
           </div>
@@ -268,5 +268,20 @@
       const active = btn.getAttribute('data-active') === 'true';// 檢查目前是否已點亮
       btn.setAttribute('data-active', String(!active));// 點擊切換亮 / 暗 狀態    });
   </script>
+  /* 星星預設樣式 */
+.star svg {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  stroke: #0f172a;   /* 預設灰藍色外框 */
+  fill: none;        /* 預設空心 */
+  transition: 0.3s;  /* 顏色切換有漸變效果 */
+}
+
+/* 點擊後變金色 */
+.star[data-active="true"] svg {
+  stroke: gold;
+  fill: gold;
+}
 </body>
 </html>
