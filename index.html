@@ -144,6 +144,11 @@
     /* 寬度 1201~1920 顯示主要內容 */
     @media (min-width: 1201px) and (max-width: 1920px) { .fallback { display:none; } }
     /* ---------- CSS 結束 ---------- */
+    /* 當星星被點擊後加上 active 屬性時，改變顏色 */
+.star[data-active="true"] svg {
+  stroke: gold;        /* 星星外框變金色 */
+  fill: gold;          /* 星星內部填滿金色 */
+}
   </style>
 </head>
 <body>
