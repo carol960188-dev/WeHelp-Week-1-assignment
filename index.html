@@ -284,12 +284,12 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
   </script>
   <script>
+  <script>
   // ===== Task 3：資料抓取與渲染（純原生 DOM，不用 innerHTML） =====
   const ENDPOINTS = [
     "https://cdn.jsdelivr.net/gh/cwpeng/test@master/assignment-3-1",
     "https://cdn.jsdelivr.net/gh/cwpeng/test@master/assignment-3-2"
   ];
-
 
   // 1) 抓 JSON
   async function fetchJSON(url){
@@ -297,6 +297,7 @@
     if(!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
     return res.json();
   }
+
 
   // 2) 從長字串中挑第一張圖片
   function pickFirstImage(str){
