@@ -285,125 +285,132 @@
   </script>
 
   <script>
-  // ===== Task 3：資料抓取與渲染（純原生 DOM，不用 innerHTML） =====
-  
-  const ENDPOINTS = [
-  "https://raw.githubusercontent.com/cwpeng/test/master/assignment-3-1",
-  "https://raw.githubusercontent.com/cwpeng/test/master/assignment-3-2"
+  <script>
+// ===== Task 3：資料抓取與渲染（純原生 DOM，不用 innerHTML） =====
+const ENDPOINTS = [
+  "https://raw.githubusercontent.com/cwpeng/test/master/assignment-3-1?_=" + Date.now(),
+  "https://raw.githubusercontent.com/cwpeng/test/master/assignment-3-2?_=" + Date.now()
 ];
 
-  // 1) 抓 JSON
-  async function fetchJSON(url){
-    const res = await fetch(url);
-    if(!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-    return res.json();
+// 1) 抓 JSON（保險版：先取 text，確認一定是「[」開頭才 parse）
+async function fetchJSON(url){
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+  const text = (await res.text()).trim();
+  console.log("FETCH", url.split("?")[0], "→", text.slice(0, 60)); // 應該是 "[" 開頭
+
+  if (!text.startsWith("[")) {
+    throw new Error("Not a JSON array. Got: " + text.slice(0, 20));
   }
+  return JSON.parse(text);
+}
 
+// 2) 從長字串中挑第一張圖片
+function pickFirstImage(str){
+  if (typeof str !== "string") return null;
+  const m = str.match(/https?:\/\/[^\s'"]+\.(?:jpg|jpeg|png)/i);
+  return m ? m[0] : null;
+}
 
-  // 2) 從長字串中挑第一張圖片
-  function pickFirstImage(str){
-    if(typeof str !== "string") return null;
-    const m = str.match(/https?:\/\/[^\s'"]+\.(?:jpg|jpeg|png)/i);
-    return m ? m[0] : null;
-  }
+// 3) 正規化每筆景點資料 -> { name, firstImage }
+function normalizeItem(raw){
+  const name = raw.stitle || raw.name || raw.title || "";
+  const imgField = raw.filelist || raw.files || raw.images || raw.img || raw.FILELIST || raw.IMAGES || "";
+  const firstImage = Array.isArray(imgField) ? (imgField[0] || null) : pickFirstImage(String(imgField));
+  return { name, firstImage };
+}
 
-  // 3) 正規化每筆景點資料 -> { name, firstImage }
-  function normalizeItem(raw){
-    const name = raw.stitle || raw.name || raw.title || "";
-    const imgField = raw.filelist || raw.files || raw.images || raw.img || raw.FILELIST || raw.IMAGES || "";
-    const firstImage = Array.isArray(imgField) ? (imgField[0] || null) : pickFirstImage(String(imgField));
-    return { name, firstImage };
-  }
+// 小工具：清空容器
+function clearChildren(node){
+  while (node.firstChild) node.removeChild(node.firstChild);
+}
 
-  // 小工具：清空容器（不用 innerHTML）
-  function clearChildren(node){
-    while (node.firstChild) node.removeChild(node.firstChild);
-  }
+// Bars：更新 #bar1 ~ #bar3
+function renderBars(items){
+  const ids = ["bar1","bar2","bar3"];
+  ids.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const img = el.querySelector("img");
+    const title = el.querySelector(".bar-title");
+    const data = items[i];
+    if (!data) return;
+    if (img && data.firstImage) img.setAttribute("src", data.firstImage);
+    if (title) title.textContent = data.name || "";
+  });
+}
 
-  // 4) 渲染 Bars（更新 #bar1 ~ #bar3 的 <img> 與 .bar-title）
-  function renderBars(items){
-    const ids = ["bar1","bar2","bar3"];
-    ids.forEach((id, i) => {
-      const el = document.getElementById(id);
-      if(!el) return;
-      const img = el.querySelector("img");
-      const title = el.querySelector(".bar-title");
-      const data = items[i];
+// Blocks：.blocks 內動態建立 10 張 .card（僅在有資料時覆蓋）
+function renderBlocks(items){
+  const root = document.querySelector(".blocks");
+  if (!root || !items?.length) return;
 
-      // 若找不到資料就不改
-      if(!data) return;
+  clearChildren(root);
 
-      if(img && data.firstImage) img.setAttribute("src", data.firstImage);
-      if(title) title.textContent = data.name || "";
-    });
-  }
+  items.forEach((it) => {
+    const card = document.createElement("div");
+    card.className = "card";
 
-  // 5) 渲染 Blocks（.blocks 下動態建立 10 張 .card）
-  function renderBlocks(items){
-    const root = document.querySelector(".blocks");
-    if(!root) return;
+    const bg = document.createElement("div");
+    bg.className = "card-bg";
+    if (it.firstImage) bg.style.backgroundImage = `url('${it.firstImage}')`;
 
-    // 你目前 HTML 已有 10 張範例卡，依題意改成「用 JS 動態塞」
-    // 因不能用 innerHTML，改用逐一移除
-    clearChildren(root);
+    const star = document.createElement("div");
+    star.className = "star";
+    star.setAttribute("data-active","false");
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox","0 0 24 24");
+    svg.setAttribute("fill","none");
+    svg.setAttribute("stroke","#0f172a");
+    svg.setAttribute("stroke-width","1.5");
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("d","M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z");
+    svg.appendChild(path);
+    star.appendChild(svg);
 
-    items.forEach((it) => {
-      const card = document.createElement("div");
-      card.className = "card";
+    const cap = document.createElement("div");
+    cap.className = "caption";
+    cap.textContent = it.name || "";
 
-      const bg = document.createElement("div");
-      bg.className = "card-bg";
-      if (it.firstImage) {
-        bg.style.backgroundImage = `url('${it.firstImage}')`;
-      }
+    card.appendChild(bg);
+    card.appendChild(star);
+    card.appendChild(cap);
+    root.appendChild(card);
+  });
+}
 
-      // 星星（保留你的互動；click 委派在全域已綁了）
-      const star = document.createElement("div");
-      star.className = "star";
-      star.setAttribute("data-active","false");
-      // 內建的 SVG（用 createElementNS 也可；這裡直接複製你的 SVG 結構）
-      const svgNS = "http://www.w3.org/2000/svg";
-      const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("viewBox","0 0 24 24");
-      svg.setAttribute("fill","none");
-      svg.setAttribute("stroke","#0f172a");
-      svg.setAttribute("stroke-width","1.5");
-      const path = document.createElementNS(svgNS, "path");
-      path.setAttribute("d","M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z");
-      svg.appendChild(path);
-      star.appendChild(svg);
-
-      const cap = document.createElement("div");
-      cap.className = "caption";
-      cap.textContent = it.name || "";
-
-      card.appendChild(bg);
-      card.appendChild(star);
-      card.appendChild(cap);
-      root.appendChild(card);
-    });
-  }
-
-  // 6) 主流程：等 DOM Ready 後抓資料並渲染
-  document.addEventListener("DOMContentLoaded", async () => {
+// 主流程
+document.addEventListener("DOMContentLoaded", async () => {
   try {
-    console.log("⏳ 正在抓取資料…");
+    if (location.protocol === "file:") {
+      console.warn("⚠️ 建議用 Live Server（http://localhost:...）開啟，避免本機檔案模式造成 fetch 限制。");
+    }
+
+    console.log("⏳ 抓取資料…");
     const results = await Promise.all(ENDPOINTS.map(fetchJSON));
-    console.log("✅ 各來源筆數：", results.map(r => r.length));
+    if (!Array.isArray(results[0]) || !Array.isArray(results[1])) {
+      throw new Error("來源不是陣列 JSON");
+    }
 
-    const merged = results.flat().map(normalizeItem);
-    window.__merged = merged; // 暫存以供檢查
-    console.log("✅ 合併後總筆數：", merged.length, "第一筆：", merged[0]);
+    const mergedRaw = results.flat();
+    window.__merged = mergedRaw; // 方便你在 Console 檢查
+    console.log("✅ 合併後總筆數：", mergedRaw.length, "第一筆原始：", mergedRaw[0]);
 
-    const top3 = merged.slice(0, 3);
-    const next10 = merged.slice(3, 13);
+    const attractions = mergedRaw.map(normalizeItem);
+    const top3 = attractions.slice(0, 3);
+    const next10 = attractions.slice(3, 13);
+
     renderBars(top3);
     renderBlocks(next10);
-    console.log("🎉 已渲染 3 + 10 筆景點");
+    console.log("🎉 渲染完成（bars:", top3.length, ", blocks:", next10.length, ")");
   } catch (err) {
     console.error("❌ 載入景點資料失敗：", err);
   }
 });
+</script>
+
+  
 
 </script>
 
