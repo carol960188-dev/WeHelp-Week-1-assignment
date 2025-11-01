@@ -386,19 +386,25 @@
 
   // 6) 主流程：等 DOM Ready 後抓資料並渲染
   document.addEventListener("DOMContentLoaded", async () => {
-    try{
-      const results = await Promise.all(ENDPOINTS.map(fetchJSON)); // 兩源並行
-      const merged = results.flat().map(normalizeItem);
+  try {
+    console.log("⏳ 正在抓取資料…");
+    const results = await Promise.all(ENDPOINTS.map(fetchJSON));
+    console.log("✅ 各來源筆數：", results.map(r => r.length));
 
-      const top3 = merged.slice(0, 3);
-      const next10 = merged.slice(3, 13);
+    const merged = results.flat().map(normalizeItem);
+    window.__merged = merged; // 暫存以供檢查
+    console.log("✅ 合併後總筆數：", merged.length, "第一筆：", merged[0]);
 
-      renderBars(top3);
-      renderBlocks(next10);
-    }catch(err){
-      console.error("載入景點資料失敗：", err);
-    }
-  });
+    const top3 = merged.slice(0, 3);
+    const next10 = merged.slice(3, 13);
+    renderBars(top3);
+    renderBlocks(next10);
+    console.log("🎉 已渲染 3 + 10 筆景點");
+  } catch (err) {
+    console.error("❌ 載入景點資料失敗：", err);
+  }
+});
+
 </script>
 
 </body>
