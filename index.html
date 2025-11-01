@@ -292,18 +292,20 @@
 // 依序嘗試的來源（兩兩成對）
 const SOURCES = [
   [
-    "https://raw.githubusercontent.com/cwpeng/test/master/assignment-3-1?_=" + Date.now(),
-    "https://raw.githubusercontent.com/cwpeng/test/master/assignment-3-2?_=" + Date.now(),
+    "https://r.jina.ai/http://cwpeng.github.io/test/assignment-3-1",
+    "https://r.jina.ai/http://cwpeng.github.io/test/assignment-3-2",
+  ],
+  [
+    "https://raw.githubusercontent.com/cwpeng/test/master/assignment-3-1",
+    "https://raw.githubusercontent.com/cwpeng/test/master/assignment-3-2",
   ],
   [
     "https://cdn.jsdelivr.net/gh/cwpeng/test@master/assignment-3-1",
     "https://cdn.jsdelivr.net/gh/cwpeng/test@master/assignment-3-2",
   ],
-  [
-    "https://r.jina.ai/http://cwpeng.github.io/test/assignment-3-1",
-    "https://r.jina.ai/http://cwpeng.github.io/test/assignment-3-2",
-  ],
 ];
+
+
 
 // 抓 JSON（保險版：先取 text，確認一定是「[」開頭才 parse）
 async function fetchArrayJSON(url){
